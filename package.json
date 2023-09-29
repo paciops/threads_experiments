@@ -4,5 +4,9 @@
   "description": "",
   "scripts": {},
   "author": "riccardo pacioni",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.7.0",
+    "ts-node": "^10.9.1"
+  }
 }
