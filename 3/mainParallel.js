@@ -32,6 +32,7 @@ const workerHandler = (n) => {
 };
 
 if (isMainThread) {
+  console.time("main thread");
   const n = 10,
     m = parseInt(process.argv[2], 10) || 100,
     poolSize = 4,
@@ -46,6 +47,8 @@ if (isMainThread) {
   }
   pool.forEach((worker) => worker.postMessage({ target }));
 
+  console.time("vectors send");
+
   for (let i = 0; i < m; i++) {
     const array = createArray(n);
 
@@ -53,6 +56,7 @@ if (isMainThread) {
       array.buffer,
     ]);
   }
+  console.timeEnd("vectors send");
 
   const result = [];
   let threadCount = 0;
@@ -66,6 +70,7 @@ if (isMainThread) {
           result.sort((a, b) => b.score - a.score);
           console.table(result.slice(0, 20));
           console.log("total = ", result.length);
+          console.timeEnd("main thread");
         }
       })
       .on("message", (msg) => result.push(...msg))
