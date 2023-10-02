@@ -10,6 +10,7 @@ import {
 
 const FILE_NAME = "./output.json";
 const POOL_SIZE = parseInt(process.argv[2], 10) || 4;
+const SKIP = parseInt(process.argv[3] || "-1", 10);
 
 const createSharedArrayBuffer = (array: number[], n: number) => {
   const sharedArray = new Float32Array(
@@ -23,7 +24,8 @@ const createArrayBuffer = (array: number[]) => new Float32Array(array);
 
 const main = (
   target: number[],
-  vectors: Float32Array[]
+  vectors: Float32Array[],
+  skip = -1
 ): Promise<SimilarVector[]> => {
   return new Promise(async (next) => {
     const n = target.length,
@@ -51,12 +53,16 @@ const main = (
 
     console.time("vectors send");
 
-    if (true) {
-      const offset = 1_000;
+    if (skip != -1) {
       let index = 0,
         vectorsIndex = 0;
-      while (vectors.length !== 0) {
-        const sliceOfVectors = vectors.splice(0, offset);
+      const m = vectors.length;
+      for (
+        let i = 0, end = Math.min(i + skip, m);
+        i < m;
+        i += skip, end = Math.min(i + skip, m), index++, vectorsIndex += skip
+      ) {
+        const sliceOfVectors = vectors.slice(i, end);
         pool[index % POOL_SIZE].postMessage(
           sliceOfVectors.map((vector, i) => ({
             id: `${i + vectorsIndex}`,
@@ -65,8 +71,6 @@ const main = (
           })),
           [...sliceOfVectors.map(({ buffer }) => buffer)]
         );
-        index++;
-        vectorsIndex += offset;
       }
     } else {
       vectors.forEach((vector, i) =>
@@ -84,8 +88,8 @@ const main = (
 };
 
 const worker = async () => {
-  return new Promise((resolve, reject) => {
-    parentPort?.on("message", handleMessage(workerData.n, resolve, reject));
+  return new Promise((resolve) => {
+    parentPort?.on("message", handleMessage(workerData.n, resolve));
   });
 };
 
@@ -95,7 +99,7 @@ if (isMainThread) {
         JSON.parse(file.toString()),
       floatVectors = vectors.map(createArrayBuffer);
     console.time("main thread");
-    main(target, floatVectors).then((vectors) => {
+    main(target, floatVectors, SKIP).then((vectors) => {
       console.timeEnd("main thread");
       vectors.sort((a, b) => b.score - a.score);
       console.table(vectors.slice(0, 20));
@@ -106,11 +110,7 @@ if (isMainThread) {
   worker().then(() => console.log("worker ends"));
 }
 
-function handleMessage(
-  n: number,
-  resolve: (value: unknown) => void,
-  reject: (reason?: any) => void
-) {
+function handleMessage(n: number, resolve: (value: unknown) => void) {
   let target: Float32Array;
   const vectors: Record<string, [Magnitude, VectorType]> = {};
   return (message: any) => {
