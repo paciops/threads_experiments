@@ -4,7 +4,7 @@ import { resolve } from "path";
 type Vector = Record<string, [number, Float32Array]>;
 
 const FILE_NAME = "output.json";
-const VECTORS_NUMBER = parseInt(process.argv[2].replaceAll("_", ""), 10) || 100;
+const VECTORS_NUMBER = parseInt((process.argv[2] || "").replaceAll("_", ""), 10) || 100;
 const VECTOR_SIZE = parseInt(process.argv[3], 10) || 10;
 const createRandomArray = (n: number) => Array(n).fill(0).map(Math.random);
 
