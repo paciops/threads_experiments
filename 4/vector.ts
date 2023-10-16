@@ -42,3 +42,13 @@ export function findSimilarVectors(
 
   return similarVectors.sort((a, b) => b.score - a.score);
 }
+
+export const createSharedArrayBuffer = (array: number[], n: number) => {
+  const sharedArray = new Float32Array(
+    new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * n)
+  );
+  for (let i = 0; i < n; i++) sharedArray[i] = array[i];
+  return sharedArray;
+};
+
+export const createArrayBuffer = (array: number[]) => new Float32Array(array);

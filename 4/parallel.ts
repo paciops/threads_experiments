@@ -6,21 +6,14 @@ import {
   VectorType,
   findSimilarVectors,
   getMagnitude,
+  createSharedArrayBuffer,
+  createArrayBuffer,
 } from "./vector";
 
 const FILE_NAME = "./output.json";
 const POOL_SIZE = parseInt(process.argv[2], 10) || 4;
 const SKIP = parseInt(process.argv[3] || "-1", 10);
 
-const createSharedArrayBuffer = (array: number[], n: number) => {
-  const sharedArray = new Float32Array(
-    new SharedArrayBuffer(Float32Array.BYTES_PER_ELEMENT * n)
-  );
-  for (let i = 0; i < n; i++) sharedArray[i] = array[i];
-  return sharedArray;
-};
-
-const createArrayBuffer = (array: number[]) => new Float32Array(array);
 
 const main = (
   target: number[],
